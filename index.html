@@ -1,0 +1,466 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>猜猜你心里的小孩</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei", sans-serif;
+    background: linear-gradient(160deg, #ffe3ec, #fff3e6 50%, #e7f3ff);
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 16px;
+  }
+  .screen { width: 100%; max-width: 430px; }
+  .hidden { display: none !important; }
+
+  .box {
+    background: #fff;
+    border-radius: 28px;
+    padding: 36px 24px;
+    width: 100%;
+    box-shadow: 0 16px 50px rgba(255, 150, 180, .18);
+    text-align: center;
+  }
+  .emoji-big { font-size: 74px; line-height: 1; margin-bottom: 16px; }
+  h1 { font-size: 26px; margin-bottom: 12px; color: #3d2c3e; }
+  .sub { font-size: 14px; color: #a08ba0; line-height: 1.7; margin-bottom: 22px; }
+  .deadline {
+    display: inline-block;
+    font-size: 12px;
+    color: #e0688a;
+    background: #ffeef3;
+    padding: 6px 14px;
+    border-radius: 20px;
+    margin-bottom: 18px;
+  }
+
+  .btn {
+    display: inline-block;
+    width: 100%;
+    padding: 16px;
+    border: none;
+    border-radius: 18px;
+    font-size: 17px;
+    font-weight: 600;
+    cursor: pointer;
+    background: linear-gradient(135deg, #ff7eb3, #ff9a5a);
+    color: #fff;
+    transition: transform .08s ease, opacity .2s;
+  }
+  .btn:active { transform: scale(.97); }
+  .btn:disabled { opacity: .5; cursor: not-allowed; }
+  .btn.ghost { background: #f3edf5; color: #9a7fa0; }
+
+  .progress-wrap { width: 100%; margin-bottom: 18px; color: #c69ab5; font-size: 13px; }
+  .progress-bar { height: 6px; border-radius: 3px; background: #f6e8ee; overflow: hidden; margin-top: 8px; }
+  .progress-fill { height: 100%; background: linear-gradient(90deg, #ff7eb3, #ff9a5a); transition: width .3s; }
+
+  .q-tag { font-size: 12px; color: #ff7eb3; margin-bottom: 8px; }
+  .q-text { font-size: 20px; font-weight: 700; color: #3d2c3e; margin-bottom: 22px; line-height: 1.5; }
+
+  .option {
+    width: 100%;
+    text-align: left;
+    padding: 16px 18px;
+    margin-bottom: 12px;
+    border: 2px solid #f4e9f0;
+    border-radius: 16px;
+    background: #fdf9fb;
+    font-size: 15px;
+    color: #4d3a4e;
+    cursor: pointer;
+    transition: all .12s ease;
+  }
+  .option:active { border-color: #ff7eb3; background: #fff0f5; }
+  .option.selected { border-color: #ff7eb3; background: #fff0f5; }
+
+  .result-card { width: 100%; background: #fff; border-radius: 28px; padding: 28px 24px; text-align: left; box-shadow: 0 16px 50px rgba(255, 150, 180, .18); }
+  .r-imgwrap { height: 220px; display: flex; align-items: center; justify-content: center; margin-bottom: 16px; }
+  .r-imgwrap img { height: 100%; width: auto; object-fit: contain; }
+  .r-name { font-size: 34px; font-weight: 800; color: #3d2c3e; letter-spacing: 2px; margin-bottom: 6px; }
+  .r-conc { font-size: 14px; color: #e0688a; margin-bottom: 16px; }
+  .r-tags { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 14px; }
+  .tag { background: #fff0f5; color: #ff6a9e; font-size: 12px; padding: 5px 12px; border-radius: 18px; }
+  .r-desc { font-size: 15px; line-height: 1.8; color: #6a556b; margin-bottom: 16px; }
+  .r-quote { font-size: 14px; font-style: italic; color: #b3949f; border-left: 3px solid #ff9a5a; padding-left: 12px; }
+
+  .analysis { width: 100%; margin-top: 16px; }
+  .ana-title { font-size: 20px; font-weight: 800; color: #3d2c3e; text-align: center; margin-bottom: 14px; }
+  .ana-section { background: #fff; border-radius: 20px; padding: 20px; margin-bottom: 12px; box-shadow: 0 8px 30px rgba(255,150,180,.12); }
+  .ana-h { font-size: 16px; font-weight: 700; color: #3d2c3e; margin-bottom: 10px; }
+  .ana-p { font-size: 14px; line-height: 1.8; color: #6a556b; }
+  .ana-list { list-style: none; }
+  .ana-list li { font-size: 14px; line-height: 1.7; color: #6a556b; padding-left: 16px; position: relative; margin-bottom: 8px; }
+  .ana-list li::before { content: '·'; position: absolute; left: 2px; color: #ff7eb3; font-weight: 700; }
+  .ana-advice { font-style: italic; color: #e0688a; }
+
+  .tip { color: #b3949f; font-size: 13px; margin-top: 20px; text-align: center; line-height: 1.7; }
+  .btn-row { width: 100%; margin-top: 16px; display: flex; flex-direction: column; gap: 10px; }
+</style>
+</head>
+<body>
+
+  <div id="expired" class="screen hidden">
+    <div class="box">
+      <h1>测试已过期</h1>
+      <p class="sub">这个测评链接到今天 24:00 就失效啦。<br>想再测一次的话，欢迎重新下单~</p>
+    </div>
+  </div>
+
+  <div id="intro" class="screen hidden">
+    <div class="box">
+      <h1>猜猜你心里的小孩</h1>
+      <p class="sub">32 道题，找到那个一直住在你心里、<br>从没长大的小孩。</p>
+      <p class="deadline" id="deadlineText"></p>
+      <button class="btn" id="startBtn">开始测试</button>
+    </div>
+  </div>
+
+  <div id="quiz" class="screen hidden">
+    <div class="progress-wrap">
+      <span id="progressText"></span>
+      <div class="progress-bar"><div class="progress-fill" id="progressFill" style="width:0%"></div></div>
+    </div>
+    <div class="box">
+      <div class="q-text" id="qText"></div>
+      <div id="options"></div>
+    </div>
+  </div>
+
+  <div id="result" class="screen hidden">
+    <div class="result-card" id="resultCard">
+      <div class="r-imgwrap"><img id="rImg" alt=""></div>
+      <div class="r-name" id="rName"></div>
+      <div class="r-conc" id="rConc"></div>
+      <div class="r-tags" id="rTags"></div>
+      <div class="r-desc" id="rDesc"></div>
+      <div class="r-quote" id="rQuote"></div>
+    </div>
+    <div class="analysis">
+      <div class="ana-title">超详细解析</div>
+      <div class="ana-section">
+        <div class="ana-h">性格画像</div>
+        <p class="ana-p" id="aPortrait"></p>
+      </div>
+      <div class="ana-section">
+        <div class="ana-h">你的闪光点</div>
+        <ul class="ana-list" id="aStrengths"></ul>
+      </div>
+      <div class="ana-section">
+        <div class="ana-h">你的小盲点</div>
+        <ul class="ana-list" id="aWeaknesses"></ul>
+      </div>
+      <div class="ana-section">
+        <div class="ana-h">恋爱与相处</div>
+        <p class="ana-p" id="aLove"></p>
+      </div>
+      <div class="ana-section">
+        <div class="ana-h">给你的一句话</div>
+        <p class="ana-p ana-advice" id="aAdvice"></p>
+      </div>
+    </div>
+    <p class="tip">请截图保存结果，退出后需重新答题</p>
+  </div>
+
+<script>
+// ============================================================
+// 过期时间：2026-09-13 18:44（测试用，5分钟后过期）
+//   new Date(年, 月-1, 日, 时, 分, 秒)
+// ============================================================
+const DEADLINE = new Date(2026, 8, 15, 0, 0, 0);
+
+// ============================================================
+// 频率选项（每题都用这 5 档）
+// ============================================================
+const SCALE = [
+  { t:'从不', score:0 },
+  { t:'很少', score:1 },
+  { t:'有时', score:2 },
+  { t:'经常', score:3 },
+  { t:'总是', score:4 },
+];
+
+// ============================================================
+// 题库（35 道单选；q=题干，a=对应形象）
+// ============================================================
+const QUESTIONS = [
+  { q:'对新鲜事物刨根问底，非要搞懂为什么', a:'好奇宝宝' },
+  { q:'主动逗笑身边的人，活跃气氛', a:'小太阳' },
+  { q:'因为一件小事就眼眶发红', a:'爱哭包' },
+  { q:'习惯性地照顾身边的人，操心他们的需求', a:'小大人' },
+  { q:'爱跟朋友开玩笑、整点小恶作剧', a:'捣蛋鬼' },
+  { q:'别人说什么都尽量配合，不爱唱反调', a:'乖乖牌' },
+  { q:'经常走神，脑补各种天马行空的画面', a:'梦想家' },
+  { q:'说走就走，喜欢去没去过的地方', a:'小探险家' },
+  { q:'认定的事，别人怎么劝都不改', a:'倔强小牛' },
+  { q:'一个人待着会觉得空落落，总想找人陪', a:'黏人精' },
+  { q:'习惯在团队里拍板做主', a:'小霸王' },
+  { q:'会默默记住别人的喜好，然后照顾到', a:'小暖炉' },
+  { q:'表达时表情动作都很夸张', a:'戏精' },
+  { q:'比起热闹，更喜欢一个人安静待着', a:'安静书虫' },
+  { q:'做事总要做到自己满意，反复检查', a:'完美主义小标兵' },
+  { q:'到一个新环境会先观察，不急着融入', a:'慢热观察者' },
+  { q:'遇到没接触过的东西，会忍不住想上手试试', a:'好奇宝宝' },
+  { q:'心情不好时也能很快调整，笑着面对', a:'小太阳' },
+  { q:'看剧、听歌时容易被戳中泪点', a:'爱哭包' },
+  { q:'遇到事情会先冷静分析，不慌不忙', a:'小大人' },
+  { q:'正经场合也忍不住搞怪', a:'捣蛋鬼' },
+  { q:'害怕起冲突，宁可自己让步', a:'乖乖牌' },
+  { q:'对未来有很多不切实际的美好想象', a:'梦想家' },
+  { q:'越是没做过的事，越想挑战', a:'小探险家' },
+  { q:'输了也不服，非得赢回来', a:'倔强小牛' },
+  { q:'会频繁给在意的人发消息，确认TA在不在', a:'黏人精' },
+  { q:'朋友被欺负时，会第一个冲上去护着', a:'小霸王' },
+  { q:'别人情绪不对时，你能第一时间察觉', a:'小暖炉' },
+  { q:'会在朋友面前即兴演上一段', a:'戏精' },
+  { q:'一个人看书、追剧就能待上一整天', a:'安静书虫' },
+  { q:'一点小瑕疵都会让你浑身难受', a:'完美主义小标兵' },
+  { q:'开口前会想很久，想清楚了才说', a:'慢热观察者' },
+];
+
+// ============================================================
+// 16 种结果（color = 卡片主色）
+// ============================================================
+const RESULTS = {
+  '好奇宝宝': { emoji:'👶', color:'#ffb347', tags:['十万个为什么','新鲜感','求知欲'],
+    desc:'你心里住着一个对世界永远好奇的小孩。别人习以为常的东西，你总能冒出"为什么"。新鲜事物是你的兴奋剂，学新东西对你来说不是负担，是快乐本身。',
+    quote:'世界那么大，你负责好奇，我负责陪你找答案。' },
+  '小太阳': { emoji:'☀️', color:'#f5a623', tags:['乐观','治愈','元气'],
+    desc:'你心里住着一轮小太阳，天塌下来也先笑。你自带正能量磁场，走到哪就把光和热带到哪，身边人总是不自觉地被你感染。',
+    quote:'你的笑容，是很多人生活里的光。' },
+  '爱哭包': { emoji:'😢', color:'#6ec6ff', tags:['敏感','共情','重感情'],
+    desc:'你心里住着一个爱哭的小孩，情绪细腻得像一根紧绷的弦。别人的快乐和难过，你都能感同身受。眼泪不是软弱，是你心里装着很多很多爱。',
+    quote:'你的敏感，是这世界最温柔的雷达。' },
+  '小大人': { emoji:'🎓', color:'#4a6fa5', tags:['懂事','靠谱','责任感'],
+    desc:'你心里住着一个过早懂事的小孩。习惯了照顾别人、扛起责任，可其实那个小孩也渴望被照顾一次。',
+    quote:'懂事是件让人心疼的事，你值得被好好疼爱。' },
+  '捣蛋鬼': { emoji:'😈', color:'#ff7043', tags:['调皮','爱玩','快乐源泉'],
+    desc:'你心里住着一个坐不住的捣蛋鬼。正经多没意思，你偏要在生活里整点活。有你在的地方，笑声就没停过。',
+    quote:'人生这场游戏，你选了最难也最好玩的难度。' },
+  '乖乖牌': { emoji:'😇', color:'#f8bbd0', tags:['温柔','守规矩','小天使'],
+    desc:'你心里住着一个乖巧的小孩，温柔、听话、不喜欢冲突。你把世界想得很简单，也希望别人能对你温柔一点。',
+    quote:'温柔是你的底色，但也要学会保护自己。' },
+  '梦想家': { emoji:'🌙', color:'#7c6ff0', tags:['脑洞','理想主义','幻想'],
+    desc:'你心里住着一个活在星星上的梦想家。现实是别人的，你的世界永远有一部正在上映的电影。别怕别人说你"不切实际"，是现实配不上你的想象力。',
+    quote:'别人看星星，而你，就住在星星上。' },
+  '小探险家': { emoji:'🧗', color:'#2ecc71', tags:['勇敢','爱冒险','不设限'],
+    desc:'你心里住着一个天不怕地不怕的探险家。安稳对你来说是牢笼，未知才是你的游乐园。下一站永远比这一站精彩。',
+    quote:'你的人生，就是一场没写攻略的冒险。' },
+  '倔强小牛': { emoji:'🐂', color:'#d35400', tags:['倔强','不服输','有主见'],
+    desc:'你心里住着一头倔强的小牛，认准的事，九头牛都拉不回来。别人说你"轴"，可正是这股轴劲儿，让你走到了别人到不了的地方。',
+    quote:'认输，从来不在你的字典里。' },
+  '黏人精': { emoji:'🐨', color:'#ff9ff3', tags:['依赖','重陪伴','怕孤单'],
+    desc:'你心里住着一个黏人的小考拉，喜欢贴着喜欢的人。你不是矫情，只是太在乎了。被你需要的人，其实也很幸福。',
+    quote:'会黏人，是因为心里装满了在意。' },
+  '小霸王': { emoji:'👑', color:'#e74c3c', tags:['自信','领导力','保护欲'],
+    desc:'你心里住着一个小霸王，天生自带气场，喜欢做主。你的强势里藏着保护欲——你想罩着你在乎的人。',
+    quote:'你不是霸道，你只是想守护你在意的一切。' },
+  '小暖炉': { emoji:'🧣', color:'#ff6f61', tags:['温柔','体贴','会照顾人'],
+    desc:'你心里住着一座小暖炉，会留意每个人的情绪，会照顾到每个人的感受。你总是温暖别人，也别忘了，你自己也需要被暖一暖。',
+    quote:'你温暖了所有人，也请让自己被人温暖。' },
+  '戏精': { emoji:'🎭', color:'#ff477e', tags:['表现力','幽默','戏多'],
+    desc:'你心里住着一个戏精，人生如戏，全靠演技。你的表情包和内心戏一样丰富，有你在的地方，永远不会冷场。',
+    quote:'生活欠你的最佳主角，你自己拿回来。' },
+  '安静书虫': { emoji:'📚', color:'#5d6d7e', tags:['内向','爱独处','慢热'],
+    desc:'你心里住着一个安静的小书虫，一个人的世界也很热闹。你不爱喧哗，却在自己的小天地里活得丰盛。慢热，是你筛选世界的门槛。',
+    quote:'安静，是你身上最有力量的温柔。' },
+  '完美主义小标兵': { emoji:'📏', color:'#6c5ce7', tags:['自律','较真','高标准'],
+    desc:'你心里住着一个事事要满分的小标兵。你对自己严苛到让人心疼。其实你已经做得很好了，偶尔也允许自己"差不多就行"。',
+    quote:'你已经很棒了，可以对自己温柔一点。' },
+  '慢热观察者': { emoji:'👀', color:'#16a085', tags:['谨慎','洞察力','内心戏'],
+    desc:'你心里住着一个慢热的观察者。你总是先看后动，把一切看得门儿清。别人以为你冷淡，其实你只是把真心留给了值得的人。',
+    quote:'你看似沉默，心里早有一片海。' },
+};
+
+// ============================================================
+// 16 种超详细解析
+// ============================================================
+const DETAIL = {
+  '好奇宝宝': { portrait:'你心里住着一个永远不满足于「就这样」的小孩。世界对别人是说明书，对你却是一本没翻完的谜题书，你总想把每件事拆开，看看里面到底怎么回事。别人早就习惯的东西，在你眼里全是一连串「为什么」。',
+    strengths:['遇到新东西眼睛会发光，一个「为什么」能带你闯进全新的世界，跟你待一块儿永远不无聊。','学东西特别快，别人还在看说明，你已经上手玩明白了。','脑子里总在冒问号，很多被忽略的细节，都被你顺藤摸瓜挖出了宝贝。'],
+    weaknesses:['三分钟热度上头时特别冲，新鲜劲一过，刚开的坑就容易晾在那儿。','问题连珠炮一样往外冒，容易把人问懵，自己还没意识到。','太急着追「下一个」，手头的事做到一半就想换方向，容易攒一堆半成品。'],
+    love:'谈恋爱对你来说是一场永不落幕的探险，你会拉着喜欢的人解锁新地方、新玩法，日子从不重复。想和你相处的人，别嫌你问题多，陪你一起好奇，比给你标准答案更让你心动。',
+    advice:'保持你的好奇心，这世界会因为你的「为什么」变得更大——但也记得，有些答案值得你停下来慢慢找。' },
+  '小太阳': { portrait:'你心里住着一个自带暖光的小孩，走到哪儿都想把气氛点亮。你不是没有乌云，只是习惯先把笑容挂上，把坏情绪留给自己慢慢消化。你的存在感不在声音大小，而在别人想起你时心里那点温度。',
+    strengths:['天生是氛围担当，冷场的时候你一开口，整个房间就像开了灯。','情绪自带修复功能，摔一跤也能爬起来笑着说没事，还顺手拉别人一把。','特别会照顾别人感受，谁蔫了你都第一个察觉，凑过去把人逗笑。'],
+    weaknesses:['太习惯当别人的小太阳，自己的委屈常常憋着不说，笑得越亮，藏得越深。','有时把「正能量」当成义务，难过了也不敢示弱，怕扫了大家的兴。','一味往前冲给对方打气，容易忽略有些时候别人只想要你陪，不需要你救。'],
+    love:'你是那种让人相处起来很放松的人，和你在一起像晒到太阳，低落时会第一个想起你。可你也要记得，爱你的人不只想要你的晴天，也想接住你的雨。',
+    advice:'你温暖了那么多人，别忘了也要给自己留一盏灯，你的坏天气也值得被好好接住。' },
+  '爱哭包': { portrait:'你心里住着一个共情开关特别灵敏的小孩，别人的情绪你隔着屏幕都能接收到。你重感情，一点小事就能在心里荡很久，眼泪不是你软弱，而是你用心在感受的证据。世界在你这里，是有温度的。',
+    strengths:['共情力满格，朋友还没开口，你已经懂他为什么难受，安慰总能说到心坎里。','感情特别真，记住的都是别人不在意的细节，被你在意是件很幸福的事。','敏感让你像个人形情绪雷达，能察觉气氛里最细微的变化，很会照顾人。'],
+    weaknesses:['太容易被别人的情绪带着走，别人皱个眉，你能脑补出一整部戏，自己先累垮。','把很多小事都往心里装，明明不是你的错，也容易先自责。','情绪来得快去得慢，一点点委屈要消化很久，有时会把小伤口磨成大心事。'],
+    love:'你爱一个人会爱得很深、很细，记得TA爱吃什么、怕什么、说过什么，是那种能把日子过出仪式感的人。想和你相处的人，请多给你一点确定的回应，你的敏感不是矫情，是需要被温柔对待。',
+    advice:'你的眼泪不是麻烦，是你温柔的证据——但也别让别人的情绪，淹没了你自己的心。' },
+  '小大人': { portrait:'你心里住着一个很早就学会了「靠谱」的小孩，习惯了把别人的事排在自己前面。你懂事得太早，照顾人成了本能，可那个被你藏起来的、也需要被照顾的小孩，一直在等你回头看看TA。',
+    strengths:['靠谱是刻在骨子里的，把事情交给你，大家都能睡个安稳觉。','天生会操心，谁需要帮忙你都想得到，细节想得比谁都周全。','情绪稳定得像个定海神针，乱了套的时候，你往那儿一站，大家就踏实了。'],
+    weaknesses:['太习惯扛事儿，自己的需求总排在最后，累到不行了还笑着说没事。','把「懂事」当成铠甲，想依赖别人的时候反而开不了口，怕给别人添麻烦。','对人对己都容易高标准，一不小心就把「被需要」当成了「被爱」。'],
+    love:'你会是那种让人特别安心的伴侣，行程、情绪、鸡毛蒜皮你都默默兜着，跟你在一起很踏实。想和你长久相处的人，会纵容你偶尔「不乖」，让你也当一回被照顾的小孩。',
+    advice:'你早就学会了照顾全世界，现在也学着照顾一下自己吧，你值得被好好疼爱，不需要用懂事去交换。' },
+  '捣蛋鬼': { portrait:'你的内核是「用热闹掩盖在乎」——看起来皮得没边，其实你只是想被看见、想让气氛永远不冷场。恶作剧是你确认「还有人喜欢我」的方式，也是最笨拙又最真诚的社交开场白。',
+    strengths:['有你在的场子永远热乎，随手一个梗就能把气氛炒起来，冷场杀手本手。','脑瓜转得飞快，点子一个接一个，别人还在琢磨你已经上手干了。','心大不记仇，闹完就翻篇，跟你待在一起的人都会特别轻松。'],
+    weaknesses:['太想逗人笑，有时候没收住，玩笑开过了头，还把真心也悄悄藏在了玩笑后面。','坐不住、沉不住气，重要的事容易三分钟热度，热闹散了就泄气。','怕安静，一个人待着会有点慌，总用喧嚣把自己填满，不敢面对空落落的那一面。'],
+    love:'恋爱里的你是「越喜欢你越爱欺负你」的类型，嘴上损得凶，其实是最高级的撒娇。想和你相处的人，别当真生气，笑着接住你的梗，再偶尔戳破一句「我知道你其实很在乎」，你就会对那个人死心塌地。',
+    advice:'不用一直那么好笑，你安静不说话的样子，也值得被人喜欢。' },
+  '乖乖牌': { portrait:'你的内核是「懂事到让人心疼」——习惯把别人的感受放在前面，把自己收得很小。你不吵不闹不是没脾气，是怕一旦起了冲突，连眼前这点温柔的关系都保不住。',
+    strengths:['靠谱本谱，答应的事一定做到，交给你的事大家都能睡个好觉。','情绪稳得像定海神针，不炸毛不甩脸，是朋友眼里最踏实的定心丸。','共情力超强，总能在别人还没开口时就察觉到情绪不对，默默递上安慰。'],
+    weaknesses:['太会委屈自己，明明心里想要嘴上却说「都行」，憋久了会内耗。','不敢拒绝，别人一提要求就心软点头，最后累垮的总是自己。','害怕冲突，有问题习惯回避，小疙瘩一直攒着攒成解不开的大疙瘩。'],
+    love:'恋爱里的你是细水长流型，不会轰轰烈烈，但会在无数个小细节里把对方照顾得妥妥帖帖。想和你相处的人，记得主动问一句「你自己想要什么」，帮你把憋在心里的话慢慢引出来。',
+    advice:'你的「好」很珍贵，但请先分一点温柔给自己，你也有资格任性一次。' },
+  '梦想家': { portrait:'你的内核是「住在另一个世界的人」——现实太普通了，所以你自己造了一个更浪漫的。脑洞大、爱幻想不是逃避，是你在给自己搭一座随时能躲回去的城堡。',
+    strengths:['想象力就是超能力，别人看到一堵墙，你眼里是一整个故事。','浪漫到骨子里，能把最平淡的日子过出诗和远方的质感。','眼里永远有光，对未来抱着一份天真的相信，这份相信会悄悄传染给身边人。'],
+    weaknesses:['想得多做得少，好多计划都停在「想」这一步，落地容易一拖再拖。','容易飘，沉浸在自己的脑洞里，一不留神就错过眼前真实的人和日子。','太理想化，期待拉得高高的，现实稍微差一点就容易掉进失落里。'],
+    love:'恋爱里的你是「给你造梦」的人，能把柴米油盐也讲成童话故事。想和你相处的人，多给一点落地感，陪你一起把梦里的画面一件件搬进现实，你会在对方身边找到脚踩大地的安心。',
+    advice:'别急着长大，你的梦很贵；但也记得偶尔回头，抱一抱那个真实世界的自己。' },
+  '小探险家': { portrait:'你的内核是「停不下来的发动机」——世界对你来说是一张没打开的藏宝图，未知不是危险，是邀请。你真正怕的不是失败，而是「没试过」。',
+    strengths:['行动力拉满，说走就走，别人还在犹豫你已经背着包出发了。','胆子大敢挑战，跌倒了拍拍土就站起来，越挫越勇那股劲儿特带感。','见多识广，永远能带回新鲜的故事和经历，是朋友圈里公认的「活地图」。'],
+    weaknesses:['太冲，想到就上，有时候没想好退路就一头扎进去。','耐心不足，爱新鲜，一件事做久了就容易腻，容易半途而废。','不爱听劝，认定的事九头牛都拉不回来，常常把别人的关心当成阻拦。'],
+    love:'恋爱里的你是「带你去看世界」的人，约会永远有惊喜，永远有下一个目的地。想和你相处的人，别急着把你拴在身边，陪你疯，也做你累了随时能回来的那个港湾。',
+    advice:'勇敢是你的底牌，但也请记得，「回来休息一下」同样是一种前进。' },
+  '倔强小牛': { portrait:'你不是犟，是把「自己认定的对」看得比什么都重。嘴上不说，心里那杆秤从没偏过，撞了南墙也不回头，因为你打心底相信墙是可以被撞倒的。这股轴劲儿，是你最硬也最疼的底色。',
+    strengths:['认准的事能死磕到底，别人都散场了你还在那儿闷头较劲，最后赢的往往是你。','特别有主见，不会被谁随便带节奏，你有自己的节奏和判断。','答应过的事再难也给你扛下来，靠谱得让人能睡个安稳觉。'],
+    weaknesses:['有时候太轴了，撞到头破血流也不肯转弯，其实换个方向一样能到。','不爱解释，心里委屈也不吭声，别人还误以为你根本不在乎。','嘴太硬，明明想关心，说出口就成了「不用你管」，其实心软得一塌糊涂。'],
+    love:'你爱得慢热但特别长情，认准一个人就是一辈子的事。你不会说甜言蜜语，却会用行动把对方圈进自己的保护范围。想和你相处的人，别跟你硬碰硬，顺着毛捋就对了，你最吃软不吃硬。',
+    advice:'倔强是你的铠甲，别让它变成困住你的笼子——偶尔认个输，不是输了，是放过了自己。' },
+  '黏人精': { portrait:'你不是黏人，是太怕一个人待着时那种空落落的感觉。你的安全感来自「有人在」——手机亮一下、一句「在呢」，就能让你踏实好久。你对关系的渴望特别纯粹，就是想要被接住、被记得。',
+    strengths:['情绪价值拉满，你比谁都懂得怎么让人感到被需要、被依赖。','一旦认定谁，就掏心掏肺地对他好，黏得认真又走心。','特别重感情，朋友一句「我陪你」能让你在心里记一辈子。'],
+    weaknesses:['太容易把对方当成全世界，一不回消息就开始胡思乱想、自己吓自己。','不敢一个人做决定，总想先问问别人，其实你比你以为的更有数。','委屈了也不说，怕说多了惹人烦，结果自己一个人憋得难受。'],
+    love:'你爱得热烈又没安全感，会反复确认「你还喜欢我吗」，其实你要的不过是一句坚定的回应。你缺的不是被哄，是被稳稳接住。想和你相处的人，多给一句「我在」，比什么都管用。',
+    advice:'你的爱不廉价，只是给得太快太满——先学会把自己填满一点，就不会总觉得空。' },
+  '小霸王': { portrait:'你不是霸道，是天生有股「我来扛」的劲儿。你习惯冲在最前面拍板做主，不是要压着谁，是怕大家没个方向乱成一团。你的强势底下，藏着一颗想护住所有人的心。',
+    strengths:['遇事不慌，关键时刻你就是那个能拍板、能扛事的主心骨。','目标感超强，想干的事雷厉风行，不带一点拖泥带水。','护短第一名，你的人你自己护，谁敢动一下试试。'],
+    weaknesses:['习惯做主，有时忘了别人也想要发言权，把人安排得明明白白却不问一句。','嘴上不肯服软，明明是为对方好，说出来却像在下命令。','什么都要自己扛，累到不行也不喊，其实身边人很想帮你一把。'],
+    love:'你爱起来是「霸道总裁」式的，用行动给对方撑起一片天，却很少说软话。你给的是踏实的担当，不是甜言蜜语。想和你相处的人，要会表达自己的需要，你最吃软不吃硬，一句「我信你」能让你瞬间柔软下来。',
+    advice:'扛得住是本事，但示弱也是——别什么都一个人撑着，你不必永远是那个最强的人。' },
+  '小暖炉': { portrait:'你天生自带一种让人想靠近的温度。你总能先一步察觉到别人哪儿不对劲，然后不动声色地把热水、外套、肩膀都递过去。你不是讨好，是把「照顾好身边的人」活成了本能。',
+    strengths:['共情力爆表，别人还没开口，你已经把纸巾递到TA手边了。','特别会照顾细节，记得住每个人的喜好，暖得像人间四月天。','有你在的场子不会冷，你能把尴尬悄悄化掉，让大家都舒服。'],
+    weaknesses:['太会照顾别人，却总把自己排到最后，累到不行还笑着说没事。','习惯当倾听者，自己的难过反而不习惯说出口，怕给别人添麻烦。','容易被「被需要」绑架，别人一示弱你就心软，边界感有点模糊。'],
+    love:'你爱得细水长流，不轰轰烈烈，却把每个细节都照顾得妥妥帖帖。你会记得对方随口提的小愿望，然后默默实现。想和你相处的人，记得多回头看看你——暖别人的那个人，也需要被暖一暖。',
+    advice:'你温暖了那么多人，别忘了留点温度给自己——你值得被好好照顾，不是只有你照顾别人。' },
+  '戏精': { portrait:'你的内核是「渴望被看见」。用夸张的表情、即兴的段子和外放的情绪，把每一次出现都变成一场小演出——那不是闹，是你害怕自己变得普通、害怕被这个房间忘掉。浮夸的壳子底下，其实藏着一个很怕冷场、很怕没人回应的你。',
+    strengths:['有你在的场子永远冷不下来，随手一个表情包级别的反应就能把整桌人逗笑。','情绪表达超直接，开心难过全写在脸上，跟你相处完全不用猜。','天生会带节奏，聚会冷场、气氛尴尬，你都能一秒接住然后把场子盘活。'],
+    weaknesses:['太在意有没有被看见，偶尔为了「有戏」用力过猛，把自己演到累。','情绪来得快也退得快，有时候连你自己都分不清哪句是真心、哪句是入戏。','习惯了用夸张代替认真，真正想被人懂的时候，反而不知道该怎么好好说出口。'],
+    love:'恋爱里的你像在演小剧场，连吵架都自带音效和转场，只是真心常常被藏在玩笑里，让人抓不准。想和你好好相处的人，要会认真接你的梗，也要会认真把你从戏里拉出来，听你讲一句不带表演的真心话。',
+    advice:'你不用一直有戏才值得被爱，安静下来的那个你，也照样闪闪发光。' },
+  '安静书虫': { portrait:'你的内核是「在自己的世界里充电」。独处不是逃避，而是你的能量来源，你在安静里想得比谁都深。表面上的不爱说话不是高冷，是你需要先确认这个人、这个环境够安全，才愿意把内心的世界一页页翻给别人看。',
+    strengths:['情绪稳到惊人，天塌下来你还能淡定翻页，是身边人最可靠的定心丸。','想事情很深，别人还停在表面，你已经在脑子里推演到三个版本之后了。','一旦你真正把一个人放进自己的世界，对方会发现那里藏着一整个辽阔的宇宙。'],
+    weaknesses:['慢热到容易被人误会成冷漠，其实你只是还没想好该怎么开口。','习惯什么都自己消化，憋着憋着就把一件小事憋成了内耗。','对热闹有点过敏，社交场合待久了就「没电」，需要随时躲起来充一会儿。'],
+    love:'你爱得安静却很深，不一定天天黏在一起，但会把对方说过的每一句话都记在心里。想和你相处的人，别硬逼你热闹，就安静地陪着、慢慢地聊，你会把那个人当成随时可以回去的地方。',
+    advice:'你的世界不需要向所有人开放，但记得给在乎你的人留一扇小门。' },
+  '完美主义小标兵': { portrait:'你的内核是「怕失控、怕不够好」。追求完美是你给自己搭的安全感，自律和较真都是你对抗不安的方式。你对自己下手最狠，对世界也偷偷希望它更有序一点——那份高标准背后，其实藏着一句「我得足够好，才值得被肯定」。',
+    strengths:['靠谱到让人放心，交到你手上的事，等于自动贴上了「包办好」的标签。','对自己有要求，别人都摆烂的时候，你还在精修那最后的1%。','目标感强、说到做到，是那种能硬生生把「理想」一步步走成现实的狠人。'],
+    weaknesses:['对自己太严格，一点小瑕疵就反复反刍，最累的其实是你自己。','容易拿自己的高标准去量别人，明明是关心，说出口却像在挑刺。','太想做到100分，反而常常错过「先完成、再完美」的那个时机。'],
+    love:'你爱起来也是用尽全力、想给满分，只是偶尔会忘记，恋爱这件事根本不需要打分。想和你相处的人，多肯定你「已经很好」，而不是追问「还能不能更好」——你已经很好了。',
+    advice:'你不需要做到完美才配被喜欢，有点小毛边儿的你，才更有人味儿。' },
+  '慢热观察者': { portrait:'你的内核是「先确认安全，再决定靠近」。谨慎和慢热不是冷淡，而是你保护自己的方式——先远远看、慢慢想，把人和事都看清楚了，才肯往前迈一步。你是人群里最安静的那个，却往往是什么都看在眼里、心里门儿清的那一个。',
+    strengths:['一眼就能看穿谁是真朋友、谁在演戏，你的社交雷达很少出错。','沉得住气，别人急着抢跑，你先把路看清楚了才稳稳迈步。','不轻易开口，一开口就正好说到点子上，句句让人服气。'],
+    weaknesses:['太谨慎容易错过时机，等你观察完，机会已经被别人抢先抱走了。','慢热让你把很多人挡在门外，连真正想靠近你的人，也会觉得你好难接近。','想得太多，有时候把简单的事想复杂，反而把自己困在了原地。'],
+    love:'你爱得慢，但一旦认定就会很长久，是那种越相处越让人觉得捡到宝的人。想和你相处的人，要给足时间和安全感，别催你表态，就等着你自己慢慢朝对方走过去。',
+    advice:'你不用把所有人都看透再行动，有时候先迈一步，风景就会跟着你走。' },
+};
+
+// ============================================================
+// 逻辑区
+// ============================================================
+const $ = id => document.getElementById(id);
+const show = id => { ['expired','intro','quiz','result'].forEach(s => $(s).classList.add('hidden')); $(id).classList.remove('hidden'); };
+
+let scores = {};
+let idx = 0;
+
+function computeAppearances() {
+  const ap = {};
+  QUESTIONS.forEach(q => { ap[q.a] = (ap[q.a] || 0) + 1; });
+  return ap;
+}
+const APPEARANCES = computeAppearances();
+
+function isExpired() { return Date.now() >= DEADLINE.getTime(); }
+
+function updateCountdown() {
+  const left = DEADLINE.getTime() - Date.now();
+  if (left <= 0) { show('expired'); return; }
+  const h = Math.floor(left / 3600000);
+  const m = Math.floor((left % 3600000) / 60000);
+  const dh = DEADLINE.getHours();
+  const dm = ('0' + DEADLINE.getMinutes()).slice(-2);
+  const remain = h > 0 ? (h + ' 小时 ' + m + ' 分') : (m + ' 分钟');
+  $('deadlineText').textContent = '今天 ' + dh + ':' + dm + ' 过期 · 还剩 ' + remain;
+}
+
+function start() {
+  scores = {};
+  idx = 0;
+  renderQuestion();
+  show('quiz');
+}
+
+function renderQuestion() {
+  const q = QUESTIONS[idx];
+  $('progressText').textContent = '第 ' + (idx + 1) + ' / ' + QUESTIONS.length + ' 题';
+  $('progressFill').style.width = (idx / QUESTIONS.length * 100) + '%';
+  $('qText').textContent = q.q;
+  $('options').innerHTML = '';
+
+  SCALE.forEach(opt => {
+    const b = document.createElement('button');
+    b.className = 'option';
+    b.textContent = opt.t;
+    b.onclick = () => choose(q.a, opt.score);
+    $('options').appendChild(b);
+  });
+}
+
+function choose(a, score) {
+  scores[a] = (scores[a] || 0) + score;
+  next();
+}
+
+function next() {
+  idx++;
+  if (idx < QUESTIONS.length) { renderQuestion(); }
+  else { finish(); }
+}
+
+function finish() {
+  const ranked = Object.entries(scores).sort((a, b) => b[1] - a[1]);
+  const top = ranked[0];
+  const r = RESULTS[top[0]];
+  const conc = Math.round((top[1] / (APPEARANCES[top[0]] * 4)) * 100);
+
+  $('rImg').src = top[0] + '.png';
+  $('rName').textContent = top[0];
+  $('rConc').textContent = '浓度 ' + conc + '%';
+  $('rTags').innerHTML = r.tags.map(t => '<span class="tag">' + t + '</span>').join('');
+  $('rDesc').textContent = r.desc;
+  $('rQuote').textContent = '「' + r.quote + '」';
+
+  const d = DETAIL[top[0]];
+  if (d) {
+    $('aPortrait').textContent = d.portrait;
+    $('aStrengths').innerHTML = d.strengths.map(s => '<li>' + s + '</li>').join('');
+    $('aWeaknesses').innerHTML = d.weaknesses.map(w => '<li>' + w + '</li>').join('');
+    $('aLove').textContent = d.love;
+    $('aAdvice').textContent = d.advice;
+  }
+  show('result');
+}
+
+function shade(hex) {
+  const n = parseInt(hex.slice(1), 16);
+  let r = (n >> 16) & 255, g = (n >> 8) & 255, b = n & 255;
+  r = Math.max(0, r - 45); g = Math.max(0, g - 45); b = Math.max(0, b - 45);
+  return '#' + ((1 << 24) + (r << 16) + (g << 8) + b).toString(16).slice(1);
+}
+
+$('startBtn').onclick = start;
+
+if (isExpired()) { show('expired'); }
+else { updateCountdown(); setInterval(updateCountdown, 30000); show('intro'); }
+</script>
+</body>
+</html>
